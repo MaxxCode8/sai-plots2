@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entity Analysis Stacked Bar Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+        .container {
+            width: 1000px;
+            background-color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #FF6384, #36A2EB, #4BC0C0, #FFCD56, #9966FF);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-weight: 600;
+            font-size: 32px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #FF6384, #36A2EB);
+            border-radius: 2px;
+        }
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .chart-wrapper {
+            height: 450px;
+            position: relative;
+            margin-bottom: 40px;
+            padding: 10px;
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        .chart-wrapper:hover {
+            transform: translateY(-5px);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .data-table th, .data-table td {
+            padding: 16px;
+            text-align: left;
+        }
+        .data-table th {
+            background: linear-gradient(45deg, #2c3e50, #4a6583);
+            color: white;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            font-size: 15px;
+        }
+        .data-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f5f7fa;
+        }
+        .data-table tr:last-child {
+            font-weight: 600;
+            background: linear-gradient(45deg, #f5f7fa, #e4e9f2) !important;
+            border-top: 2px solid #ddd;
+        }
+        .color-cell {
+            width: 30px;
+        }
+        .color-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .data-table tbody tr:hover .color-box {
+            transform: scale(1.2);
+        }
+        .key-findings {
+            max-width: 300px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .summary {
+            background: linear-gradient(45deg, #f5f7fa, #e4e9f2);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .summary::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 5px;
+            background: linear-gradient(to bottom, #FF6384, #36A2EB);
+        }
+        .summary h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-weight: 600;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        .summary p {
+            line-height: 1.8;
+            font-size: 15px;
+            color: #445668;
+        }
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 12px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+        .legend-label {
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        @media (max-width: 1024px) {
+            .container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Entity Types & Pattern Distribution</h1>
+        
+        <div class="chart-container">
+            <div class="legend-container" id="patterns-legend">
+                <!-- Pattern legends will be inserted here by JavaScript -->
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="stackedBarChart"></canvas>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Entity Type</th>
+                        <th>Count</th>
+                        <th>%</th>
+                        <th>Key Findings</th>
+                    </tr>
+                </thead>
+                <tbody id="data-body">
+                    <!-- Table rows will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary">
+            <h2>Key Insights</h2>
+            <p id="summary-text">
+                The analysis shows the distribution of various entity types and their corresponding pattern breakdowns. 
+                "Unbilled" entities represent the largest segment at 36%, with "Degrowth" following at 29%. 
+                "FIP issue" is the most common pattern across entity types, particularly prevalent in "Degrowth" entities.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Entity types data
+            const entityTypes = [
+                {
+                    type: "Degrowth",
+                    description: "Entity's data fetches have declined with time",
+                    count: 8,
+                    percentage: 29,
+                    findings: "3 out of 8 customers have expressed grievance towards no intimation/bad support when SBI was withdrawn as an FIP.",
+                    patterns: {
+                        "Await": 1,
+                        "FIP issue": 2,
+                        "Low user count": 0,
+                        "SBI issue": 3,
+                        "Query": 0,
+                        "Need SPOC": 0,
+                        "No issue": 2,
+                        "No business": 0,
+                        "NA": 0
+                    }
+                },
+                {
+                    type: "Discovered",
+                    description: "Discovery completed and next actions are clear",
+                    count: 6,
+                    percentage: 21,
+                    findings: "Reconnected with Orrish finance and currently assisting them.",
+                    patterns: {
+                        "Await": 1,
+                        "FIP issue": 2,
+                        "Low user count": 1,
+                        "SBI issue": 0,
+                        "Query": 0,
+                        "Need SPOC": 0,
+                        "No issue": 2,
+                        "No business": 0,
+                        "NA": 0
+                    }
+                },
+                {
+                    type: "Pitched Finvu & finfactor",
+                    description: "Gave the customer a demo",
+                    count: 1,
+                    percentage: 4,
+                    findings: "Bijay Finance - Got a reference from one of our customers. Await their feedback on the commercials sent.",
+                    patterns: {
+                        "Await": 0,
+                        "FIP issue": 0,
+                        "Low user count": 0,
+                        "SBI issue": 0,
+                        "Query": 0,
+                        "Need SPOC": 0,
+                        "No issue": 0,
+                        "No business": 0,
+                        "NA": 1
+                    }
+                },
+                {
+                    type: "Reach full potential",
+                    description: "Have to act on how we can increase business",
+                    count: 3,
+                    percentage: 11,
+                    findings: "Sarvagram's business requires it to fetch data from co-operative banks. Save Financial experienced a 10% success rate and also mentioned grievance towards bad support.",
+                    patterns: {
+                        "Await": 1,
+                        "FIP issue": 2,
+                        "Low user count": 0,
+                        "SBI issue": 0,
+                        "Query": 0,
+                        "Need SPOC": 0,
+                        "No issue": 0,
+                        "No business": 0,
+                        "NA": 0
+                    }
+                },
+                {
+                    type: "Unbilled",
+                    description: "Customers who were unbilled",
+                    count: 10,
+                    percentage: 36,
+                    findings: "Newtap Finance and Ncash are hot leads.",
+                    patterns: {
+                        "Await": 2,
+                        "FIP issue": 0,
+                        "Low user count": 1,
+                        "SBI issue": 1,
+                        "Query": 2,
+                        "Need SPOC": 2,
+                        "No issue": 0,
+                        "No business": 1,
+                        "NA": 1
+                    }
+                }
+            ];
+
+            // Sort entity types by percentage (descending)
+            entityTypes.sort((a, b) => b.percentage - a.percentage);
+            
+            // Get all pattern types
+            const patternTypes = [
+                'Await', 'FIP issue', 'Low user count', 'SBI issue', 
+                'Query', 'Need SPOC', 'No issue', 'No business', 'NA'
+            ];
+
+            // Colors for entity types
+            const entityColors = [
+                '#FF6384', // Red
+                '#36A2EB', // Blue
+                '#4BC0C0', // Teal
+                '#FFCD56', // Yellow
+                '#9966FF'  // Purple
+            ];
+            
+            // Colors for patterns
+            const patternColors = [
+                '#FF8C00', // Dark Orange
+                '#4169E1', // Royal Blue
+                '#2E8B57', // Sea Green
+                '#B22222', // Firebrick
+                '#8A2BE2', // Blue Violet
+                '#FF1493', // Deep Pink
+                '#228B22', // Forest Green
+                '#4682B4', // Steel Blue
+                '#708090'  // Slate Gray
+            ];
+
+            // Create legend for patterns
+            const patternsLegend = document.getElementById('patterns-legend');
+            entityTypes.forEach((entity, index) => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                
+                const legendColor = document.createElement('div');
+                legendColor.className = 'legend-color';
+                legendColor.style.backgroundColor = entityColors[index];
+                
+                const legendLabel = document.createElement('div');
+                legendLabel.className = 'legend-label';
+                legendLabel.textContent = entity.type;
+                
+                legendItem.appendChild(legendColor);
+                legendItem.appendChild(legendLabel);
+                patternsLegend.appendChild(legendItem);
+            });
+            
+            // Prepare data for the stacked bar chart
+            const labels = patternTypes;
+            
+            // Create datasets for each entity type
+            const datasets = entityTypes.map((entity, index) => {
+                return {
+                    label: entity.type,
+                    data: patternTypes.map(pattern => entity.patterns[pattern] || 0),
+                    backgroundColor: entityColors[index],
+                    borderColor: 'white',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    stack: 'Stack 0'
+                };
+            });
+            
+            // Create the stacked bar chart
+            const ctx = document.getElementById('stackedBarChart').getContext('2d');
+            const stackedBarChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Poppins',
+                                    size: 13
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(200, 200, 200, 0.2)'
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Poppins',
+                                    size: 13
+                                },
+                                color: '#2c3e50',
+                                precision: 0,
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#2c3e50',
+                            bodyColor: '#2c3e50',
+                            titleFont: {
+                                family: 'Poppins',
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                family: 'Poppins',
+                                size: 14
+                            },
+                            padding: 15,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            borderColor: '#ddd',
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return tooltipItems[0].label;
+                                },
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    return `${label}: ${context.raw}`;
+                                },
+                                afterLabel: function(context) {
+                                    const entityIndex = context.dataIndex;
+                                    const entity = entityTypes[entityIndex];
+                                    return [`Total Count: ${entity.count}`, `Percentage: ${entity.percentage}%`];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Populate the data table
+            const dataBody = document.getElementById('data-body');
+            
+            // Add entity rows
+            entityTypes.forEach((entity, index) => {
+                const row = document.createElement('tr');
+                
+                const colorCell = document.createElement('td');
+                colorCell.className = 'color-cell';
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = entityColors[index];
+                colorCell.appendChild(colorBox);
+                
+                const typeCell = document.createElement('td');
+                typeCell.style.fontWeight = '500';
+                typeCell.textContent = entity.type;
+                
+                const countCell = document.createElement('td');
+                countCell.style.fontWeight = '500';
+                countCell.textContent = entity.count;
+                
+                const percentCell = document.createElement('td');
+                percentCell.textContent = entity.percentage + '%';
+                
+                const findingsCell = document.createElement('td');
+                findingsCell.className = 'key-findings';
+                findingsCell.textContent = entity.findings;
+                
+                row.appendChild(colorCell);
+                row.appendChild(typeCell);
+                row.appendChild(countCell);
+                row.appendChild(percentCell);
+                row.appendChild(findingsCell);
+                
+                // Highlight the corresponding bar in the chart when hovering over the table row
+                row.addEventListener('mouseenter', () => {
+                    // Highlight the corresponding entity in all bars
+                    const dataset = stackedBarChart.data.datasets[index];
+                    dataset.backgroundColor = entityColors[index];
+                    
+                    // Fade out other entities
+                    stackedBarChart.data.datasets.forEach((ds, i) => {
+                        if (i !== index) {
+                            ds.backgroundColor = entityColors[i] + '50';
+                        }
+                    });
+                    stackedBarChart.update();
+                });
+                
+                row.addEventListener('mouseleave', () => {
+                    // Restore original colors
+                    stackedBarChart.data.datasets.forEach((ds, i) => {
+                        ds.backgroundColor = entityColors[i];
+                    });
+                    stackedBarChart.update();
+                });
+                
+                dataBody.appendChild(row);
+            });
+            
+            // Add total row
+            const totalRow = document.createElement('tr');
+            
+            const emptyColorCell = document.createElement('td');
+            const totalLabelCell = document.createElement('td');
+            totalLabelCell.textContent = 'Total';
+            
+            const totalCount = entityTypes.reduce((sum, entity) => sum + entity.count, 0);
+            const totalCountCell = document.createElement('td');
+            totalCountCell.textContent = totalCount;
+            
+            const totalPercentCell = document.createElement('td');
+            totalPercentCell.textContent = '100%';
+            
+            const emptyFindingsCell = document.createElement('td');
+            
+            totalRow.appendChild(emptyColorCell);
+            totalRow.appendChild(totalLabelCell);
+            totalRow.appendChild(totalCountCell);
+            totalRow.appendChild(totalPercentCell);
+            totalRow.appendChild(emptyFindingsCell);
+            
+            dataBody.appendChild(totalRow);
+            
+            // Generate summary
+            const summaryText = document.getElementById('summary-text');
+            
+            // Find the most common pattern
+            const patternCounts = patternTypes.map(pattern => ({
+                pattern,
+                count: entityTypes.reduce((sum, entity) => sum + (entity.patterns[pattern] || 0), 0)
+            }));
+            
+            patternCounts.sort((a, b) => b.count - a.count);
+            const topPattern = patternCounts[0];
+            
+            // Get the top entity types
+            const topEntityTypes = [...entityTypes].slice(0, 2);
+            
+            summaryText.textContent = `Analysis shows that "${topPattern.pattern}" is the most common pattern with ${topPattern.count} occurrences across all entities. The patterns are predominantly seen in "${topEntityTypes[0].type}" (${topEntityTypes[0].percentage}%) and "${topEntityTypes[1].type}" (${topEntityTypes[1].percentage}%) entity types. Key findings indicate that ${entityTypes[0].findings.split('.')[0]}.`;
+        });
+    </script>
+</body>
+</html> 

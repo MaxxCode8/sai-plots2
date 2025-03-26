@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entity Distribution Pie Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #2c3e50;
+        }
+        .container {
+            width: 1000px;
+            background-color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #FF6384, #36A2EB, #4BC0C0, #FFCD56, #9966FF);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-weight: 600;
+            font-size: 32px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #FF6384, #36A2EB);
+            border-radius: 2px;
+        }
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .chart-wrapper {
+            height: 450px;
+            position: relative;
+            margin-bottom: 40px;
+            padding: 10px;
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        .chart-wrapper:hover {
+            transform: translateY(-5px);
+        }
+        .legend-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .legend-table th, .legend-table td {
+            padding: 16px;
+            text-align: left;
+        }
+        .legend-table th {
+            background: linear-gradient(45deg, #2c3e50, #4a6583);
+            color: white;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            font-size: 15px;
+        }
+        .legend-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        .legend-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .legend-table tbody tr:nth-child(even) {
+            background-color: #f5f7fa;
+        }
+        .legend-table tr:last-child {
+            font-weight: 600;
+            background: linear-gradient(45deg, #f5f7fa, #e4e9f2) !important;
+            border-top: 2px solid #ddd;
+        }
+        .color-cell {
+            width: 30px;
+        }
+        .color-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        .legend-table tbody tr:hover .color-box {
+            transform: scale(1.2);
+        }
+        .summary {
+            background: linear-gradient(45deg, #f5f7fa, #e4e9f2);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .summary::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 5px;
+            background: linear-gradient(to bottom, #FF6384, #36A2EB);
+        }
+        .summary h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-weight: 600;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        .summary p {
+            line-height: 1.8;
+            font-size: 15px;
+            color: #445668;
+        }
+        @media (max-width: 1024px) {
+            .container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Entity Distribution Analysis</h1>
+        
+        <div class="chart-container">
+            <div class="chart-wrapper">
+                <canvas id="entityChart"></canvas>
+            </div>
+            
+            <table class="legend-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Type of entity</th>
+                        <th>Description</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody id="legend-body">
+                    <!-- Table rows will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary">
+            <h2>Key Insights</h2>
+            <p>
+                The analysis shows that 36% of entities are Unbilled customers, followed by 29% in Degrowth status. 
+                21% have been fully Discovered with clear next actions, while 11% have potential for business growth. 
+                Only 4% have been pitched with our financial solutions.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const data = [
+                { type: 'Unbilled', description: 'Customers who were unbilled', count: 10, percentage: 36 },
+                { type: 'Degrowth', description: 'Entity\'s data fetches have declined with time', count: 8, percentage: 29 },
+                { type: 'Discovered', description: 'Discovery completed and next actions are clear', count: 6, percentage: 21 },
+                { type: 'Reach full potential', description: 'Have to act on how we can increase business', count: 3, percentage: 11 },
+                { type: 'Pitched Finvu & finfactor', description: 'Gave the customer a demo', count: 1, percentage: 4 }
+            ];
+
+            // Sort data for visual clarity
+            data.sort((a, b) => b.percentage - a.percentage);
+
+            // Define vibrant but professional colors
+            const colors = [
+                '#FF6384', // bright red/pink
+                '#36A2EB', // bright blue
+                '#4BC0C0', // teal
+                '#FFCD56', // yellow
+                '#9966FF', // purple
+            ];
+
+            // Register the datalabels plugin
+            Chart.register(ChartDataLabels);
+
+            const ctx = document.getElementById('entityChart').getContext('2d');
+            
+            // Create gradient backgrounds
+            const pieColors = colors.map((color, index) => {
+                const gradientFill = ctx.createRadialGradient(300, 200, 0, 300, 200, 300);
+                gradientFill.addColorStop(0, color);
+                gradientFill.addColorStop(1, color + '99'); // Add transparency to outer edge
+                return gradientFill;
+            });
+            
+            const entityChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(d => d.type),
+                    datasets: [{
+                        data: data.map(d => d.percentage),
+                        backgroundColor: pieColors,
+                        borderColor: 'white',
+                        borderWidth: 3,
+                        hoverBorderWidth: 5,
+                        hoverBorderColor: 'white',
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1500,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#2c3e50',
+                            bodyColor: '#2c3e50',
+                            titleFont: {
+                                family: 'Poppins',
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                family: 'Poppins',
+                                size: 14
+                            },
+                            padding: 15,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            borderColor: '#ddd',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    const item = data[context.dataIndex];
+                                    return [
+                                        `${context.label}: ${context.raw}%`,
+                                        `Count: ${item.count}`
+                                    ];
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                family: 'Poppins',
+                                weight: 'bold',
+                                size: 16
+                            },
+                            formatter: function(value) {
+                                return value + '%';
+                            },
+                            textShadow: '0 0 4px rgba(0,0,0,0.7)',
+                            display: function(context) {
+                                return context.dataset.data[context.dataIndex] > 3; // Only show labels for segments > 3%
+                            },
+                            align: 'center',
+                            anchor: 'center',
+                            offset: 0
+                        }
+                    }
+                }
+            });
+
+            // Create table rows for legend
+            const legendBody = document.getElementById('legend-body');
+            
+            // Add data rows
+            let totalCount = 0;
+            data.forEach((item, index) => {
+                totalCount += item.count;
+                
+                const row = document.createElement('tr');
+                
+                const colorCell = document.createElement('td');
+                colorCell.className = 'color-cell';
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = colors[index];
+                colorCell.appendChild(colorBox);
+                
+                const typeCell = document.createElement('td');
+                typeCell.style.fontWeight = '500';
+                typeCell.textContent = item.type;
+                
+                const descCell = document.createElement('td');
+                descCell.textContent = item.description;
+                
+                const countCell = document.createElement('td');
+                countCell.style.fontWeight = '500';
+                countCell.textContent = item.count;
+                
+                row.appendChild(colorCell);
+                row.appendChild(typeCell);
+                row.appendChild(descCell);
+                row.appendChild(countCell);
+                
+                // Add hover effect to highlight pie section
+                row.addEventListener('mouseenter', () => {
+                    entityChart.setActiveElements([{datasetIndex: 0, index: index}]);
+                    entityChart.update();
+                });
+                
+                row.addEventListener('mouseleave', () => {
+                    entityChart.setActiveElements([]);
+                    entityChart.update();
+                });
+                
+                legendBody.appendChild(row);
+            });
+            
+            // Add total row
+            const totalRow = document.createElement('tr');
+            
+            const emptyColorCell = document.createElement('td');
+            const totalLabelCell = document.createElement('td');
+            totalLabelCell.textContent = 'Total';
+            
+            const emptyDescCell = document.createElement('td');
+            
+            const totalCountCell = document.createElement('td');
+            totalCountCell.textContent = totalCount;
+            
+            totalRow.appendChild(emptyColorCell);
+            totalRow.appendChild(totalLabelCell);
+            totalRow.appendChild(emptyDescCell);
+            totalRow.appendChild(totalCountCell);
+            
+            legendBody.appendChild(totalRow);
+        });
+    </script>
+</body>
+</html> 
